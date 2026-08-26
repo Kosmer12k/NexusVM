@@ -1,0 +1,18 @@
+// Top-level build file for NexusVM
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.0'
+    }
+}
+
+allprojects {
+    // Repository config is in settings.gradle
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

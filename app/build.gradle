@@ -1,0 +1,73 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.nexusvm.engine'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.nexusvm.engine"
+        minSdk 28          // Android 9+ (needed for seccomp-bpf & memfd_create)
+        targetSdk 33
+        versionCode 1
+        versionName "1.0.0"
+
+        ndk {
+            abiFilters 'arm64-v8a'  // ARM64 only — this engine runs native ARM
+        }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++20 -fPIC -Wall -Wextra -O2 -DNDEBUG"
+                arguments "-DANDROID_STL=c++_shared",
+                          "-DANDROID_TOOLCHAIN=clang",
+                          "-DANDROID_PLATFORM=android-28"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            jniDebuggable true
+            externalNativeBuild {
+                cmake {
+                    cppFlags "-std=c++20 -fPIC -Wall -Wextra -g -O0 -DDEBUG"
+                }
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    packagingOptions {
+        // Don't strip our custom .so files that will be injected into guest
+        doNotStrip '*/arm64-v8a/libfakeroot.so'
+        doNotStrip '*/arm64-v8a/libegl_proxy.so'
+        doNotStrip '*/arm64-v8a/libvulkan_proxy.so'
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.9.0'
+}

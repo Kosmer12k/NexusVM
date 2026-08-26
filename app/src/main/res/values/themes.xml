@@ -1,0 +1,13 @@
+<resources>
+    <style name="Theme.NexusVM" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#FF00E5FF</item>
+        <item name="colorPrimaryVariant">#FF0097A7</item>
+        <item name="colorOnPrimary">#FF000000</item>
+        <item name="colorSecondary">#FF03DAC5</item>
+        <item name="colorSecondaryVariant">#FF018786</item>
+        <item name="colorOnSecondary">#FF000000</item>
+        <item name="android:statusBarColor">#FF1E1E2E</item>
+        <item name="android:navigationBarColor">#FF121212</item>
+        <item name="android:windowBackground">#FF121212</item>
+    </style>
+</resources>

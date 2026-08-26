@@ -1,0 +1,17 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+test_bin
+test_engine_bin
+workspace/
+rootfs/
+*.tar.gz
+*.img
+*.xz

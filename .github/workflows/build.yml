@@ -38,7 +38,7 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --info --stacktrace
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4

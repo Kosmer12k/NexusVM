@@ -32,15 +32,25 @@ jobs:
         sdkmanager --install "ndk;25.2.9519653" "cmake;3.22.1"
         echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
 
+    # Автоматически исправляем несовместимый с ARM64 код перед компиляцией
+    - name: Patch C++ Source Files for Compatibility
+      run: |
+        sed -i 's/__NR_mknod/__NR_mknodat/g' app/src/main/cpp/engine/modules/syscall_interceptor.cpp
+
     - name: Setup Gradle Environment
       uses: gradle/actions/setup-gradle@v4
       with:
         gradle-version: '8.7'
 
-    # Принудительно отключаем строгость компилятора Clang к ошибкам типов в коде C++
-    - name: Build Debug APK with Compiler Flags
-      run: |
-        gradle assembleDebug \
-          -Pandroid.アンプロテクテッド_flags="-Wno-error -Wno-implicit-function-declaration" \
-          -Dorg.gradle.project.android.ndk.cxxFlags="-Wno-error"
-          
+    - name: Build Debug APK
+      run: gradle assembleDebug
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nexusvm-debug-apk
+        path: |
+          app/build/outputs/apk/debug/app-debug.apk
+          **/build/outputs/apk/**/*.apk
+        if-no-files-found: error
+        

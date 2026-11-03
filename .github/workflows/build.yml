@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch: # Позволяет запускать сборку вручную во вкладке Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -23,26 +23,27 @@ jobs:
         cache: 'gradle'
 
     - name: Set up Android SDK
-      uses: android-actions/setup-android@v4 # Используется исправленная версия v4
+      uses: android-actions/setup-android@v4
       with:
         log-accepted-android-sdk-licenses: false
 
-    # Проекту NexusVM необходимы конкретные версии NDK и CMake для сборки C++20 модулей
     - name: Install Android NDK and CMake
       run: |
         sdkmanager --install "ndk;25.2.9519653" "cmake;3.22.1"
         echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
 
-    - name: Grant Execute Permission for Gradle
-      run: chmod +x gradlew
-
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug
+    # Используем официальный экшен Gradle, который сам сгенерирует или найдет обертку
+    - name: Setup and Run Gradle Build
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        arguments: assembleDebug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: nexusvm-debug-apk
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: |
+          app/build/outputs/apk/debug/app-debug.apk
+          **/build/outputs/apk/**/*.apk
         if-no-files-found: error
         

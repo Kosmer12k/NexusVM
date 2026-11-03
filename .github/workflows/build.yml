@@ -32,11 +32,19 @@ jobs:
         sdkmanager --install "ndk;25.2.9519653" "cmake;3.22.1"
         echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
 
-    # Используем официальный экшен Gradle, который сам сгенерирует или найдет обертку
-    - name: Setup and Run Gradle Build
+    # Корректно настраиваем кэш и среду Gradle (без параметра arguments)
+    - name: Setup Gradle Environment
       uses: gradle/actions/setup-gradle@v4
-      with:
-        arguments: assembleDebug
+
+    # Запускаем сборку через системный gradle, если в репозитории нет gradlew
+    - name: Build Debug APK
+      run: |
+        if [ -f ./gradlew ]; then
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        else
+          gradle assembleDebug
+        fi
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4

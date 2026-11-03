@@ -28,6 +28,9 @@ jobs:
         run: |
           echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.1.8937393" "cmake;3.22.1"
 
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper
+
       - name: Make gradlew executable
         run: chmod +x gradlew
 

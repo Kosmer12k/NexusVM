@@ -32,13 +32,13 @@ jobs:
         sdkmanager --install "ndk;25.2.9519653" "cmake;3.22.1"
         echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
 
-    # Динамический поиск файлов по всему проекту для применения исправлений
+    # Исправляем несовместимости C++ кода под ARM64 и заголовки NDK 25
     - name: Patch C++ Source Files for Compatibility
       run: |
-        # 1. Поиск и исправление макроса mknod для ARM64
-        find . -name "syscall_interceptor.cpp" -exec sed -i 's/__NR_mknod/__NR_mknodat/g' {} +
+        # 1. Просто комментируем строку регистрации обработчика mknod, так как его нет в ARM64
+        find . -name "syscall_interceptor.cpp" -exec sed -i 's/registerHandler(__NR_mknod,/\/\/ registerHandler(__NR_mknod,/g' {} +
         
-        # 2. Поиск и исправление типов аргументов функции ioctl
+        # 2. Исправляем конфликтующие типы аргументов функции ioctl для fakeroot-модуля
         find . -name "fakeroot_inject.cpp" -exec sed -i 's/int ioctl(int fd, unsigned long request, ...)/int ioctl(int fd, int request, ...)/g' {} +
 
     - name: Setup Gradle Environment
@@ -48,7 +48,6 @@ jobs:
 
     - name: Build Debug APK
       run: |
-        # Проверяем, где находится gradle проект и собираем его
         if [ -f ./gradlew ] || [ -f ./build.gradle ]; then
           gradle assembleDebug
         else

@@ -32,10 +32,14 @@ jobs:
         sdkmanager --install "ndk;25.2.9519653" "cmake;3.22.1"
         echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
 
-    # Автоматически исправляем несовместимый с ARM64 код перед компиляцией
+    # Автоматически исправляем несовместимости C++ кода под современные NDK заголовки
     - name: Patch C++ Source Files for Compatibility
       run: |
+        # 1. Исправление отсутствующего макроса mknod для ARM64
         sed -i 's/__NR_mknod/__NR_mknodat/g' app/src/main/cpp/engine/modules/syscall_interceptor.cpp
+        
+        # 2. Исправление типов аргументов функции ioctl для совместимости с Bionic
+        sed -i 's/int ioctl(int fd, unsigned long request, ...)/int ioctl(int fd, int request, ...)/g' app/src/main/cpp/inject/fakeroot_inject.cpp
 
     - name: Setup Gradle Environment
       uses: gradle/actions/setup-gradle@v4

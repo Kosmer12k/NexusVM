@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch: # Позволяет запускать сборку вручную из вкладки Actions
+  workflow_dispatch: # Позволяет запускать сборку вручную во вкладке Actions
 
 jobs:
   build:
@@ -22,12 +22,12 @@ jobs:
         java-version: '17'
         cache: 'gradle'
 
-    - name: Set up Android SDK & NDK
-      uses: android-actions/setup-android@v3
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v4 # Используется исправленная версия v4
       with:
         log-accepted-android-sdk-licenses: false
 
-    # Проект NexusVM использует C++20 и NDK. Устанавливаем NDK и CMake.
+    # Проекту NexusVM необходимы конкретные версии NDK и CMake для сборки C++20 модулей
     - name: Install Android NDK and CMake
       run: |
         sdkmanager --install "ndk;25.2.9519653" "cmake;3.22.1"

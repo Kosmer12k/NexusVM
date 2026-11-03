@@ -32,14 +32,43 @@ jobs:
         sdkmanager --install "ndk;25.2.9519653" "cmake;3.22.1"
         echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
 
-    # Исправляем несовместимости C++ кода под ARM64 и заголовки NDK 25
+    # Безопасный и точный патчинг C++ кода через Python (работает при любой структуре папок)
     - name: Patch C++ Source Files for Compatibility
       run: |
-        # 1. Просто комментируем строку регистрации обработчика mknod, так как его нет в ARM64
-        find . -name "syscall_interceptor.cpp" -exec sed -i 's/registerHandler(__NR_mknod,/\/\/ registerHandler(__NR_mknod,/g' {} +
+        python3 -c "
+        import os, re
         
-        # 2. Исправляем конфликтующие типы аргументов функции ioctl для fakeroot-модуля
-        find . -name "fakeroot_inject.cpp" -exec sed -i 's/int ioctl(int fd, unsigned long request, ...)/int ioctl(int fd, int request, ...)/g' {} +
+        # 1. Лечим файл syscall_interceptor.cpp (добавляем фейковый макрос mknod в самое начало)
+        for root, dirs, files in os.walk('.'):
+            if 'syscall_interceptor.cpp' in files:
+                path = os.path.join(root, 'syscall_interceptor.cpp')
+                with open(path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                if '#define __NR_mknod' not in content:
+                    content = '#define __NR_mknod 9999\n' + content
+                    with open(path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    print('Успешно добавлен макрос mknod в syscall_interceptor.cpp')
+
+        # 2. Лечим файл fakeroot_inject.cpp (исправляем типы аргументов ioctl)
+        for root, dirs, files in os.walk('.'):
+            if 'fakeroot_inject.cpp' in files:
+                path = os.path.join(root, 'fakeroot_inject.cpp')
+                with open(path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # Ищем точное объявление функции ioctl независимо от пробелов и переносов
+                pattern = r'int\s+ioctl\s*\(\s*int\s+fd\s*,\s*unsigned\s+long\s+request\s*,\s*\.\.\.\s*\)'
+                replacement = 'int ioctl(int fd, int request, ...)'
+                
+                if re.search(pattern, content):
+                    content = re.sub(pattern, replacement, content)
+                    with open(path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    print('Успешно исправлена сигнатура ioctl в fakeroot_inject.cpp')
+                else:
+                    print('Предупреждение: сигнатура ioctl не найдена или уже изменена')
+        "
 
     - name: Setup Gradle Environment
       uses: gradle/actions/setup-gradle@v4
